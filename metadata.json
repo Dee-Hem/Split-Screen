@@ -1,0 +1,6 @@
+{
+  "name": "Split Screen",
+  "description": "Create home screen shortcuts to quickly launch two apps in split-screen mode.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

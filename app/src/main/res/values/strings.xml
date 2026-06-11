@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">Split Screen</string>
+    <string name="accessibility_service_description">This lightweight service is used exclusively to toggle the Android split-screen grid. No user data, keystrokes, or screen contents are read, analyzed, or transmitted. It operates entirely offline and locally on your device.</string>
+</resources>
