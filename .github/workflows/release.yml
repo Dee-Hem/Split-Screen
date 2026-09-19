@@ -2,8 +2,6 @@ name: Build & Release Signed APK
 
 on:
   push:
-    tags:
-      - 'v*'
     branches:
       - main
 
@@ -41,10 +39,8 @@ jobs:
             -Pandroid.injected.signing.key.alias=$SIGNING_KEY_ALIAS \
             -Pandroid.injected.signing.key.password=$SIGNING_KEY_PASSWORD
 
-      - name: Create GitHub Release
-        uses: softprops/action-gh-release@v2
+      - name: Upload APK Artifact
+        uses: actions/upload-artifact@v4
         with:
-          tag_name: ${{ github.ref_name }}
-          files: app/build/outputs/apk/release/*.apk
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          name: splitz-release-apk
+          path: app/build/outputs/apk/release/*.apk
