@@ -8,11 +8,11 @@ plugins {
 }
 
 android {
-  namespace = "com.example"
+  namespace = "com.deehem.splitz"
   compileSdk { version = release(36) { minorApiLevel = 1 } }
 
   defaultConfig {
-    applicationId = "com.aistudio.splitscreen.mkzylp"
+    applicationId = "com.deehem.splitz"
     minSdk = 24
     targetSdk = 36
     versionCode = 1

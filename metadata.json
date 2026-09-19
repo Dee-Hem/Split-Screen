@@ -1,6 +1,6 @@
 {
-  "name": "Split Screen",
-  "description": "Create home screen shortcuts to quickly launch two apps in split-screen mode.",
+  "name": "Splitz",
+  "description": "Splitz - Fast split-screen app pairing, custom folders, and 1-tap shortcuts.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }
