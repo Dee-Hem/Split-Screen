@@ -2,6 +2,8 @@ name: Build & Release Signed APK
 
 on:
   push:
+    tags:
+      - 'v*'
     branches:
       - main
 
@@ -25,7 +27,7 @@ jobs:
 
       - name: Decode Keystore
         run: |
-          echo "${{ secrets.SIGNING_KEY }}" | base64 -d > app/release-upload-key.jks
+          echo "${{ secrets.SIGNING_KEY }}" | base64 --decode > app/release-upload-key.jks
 
       - name: Build Signed Release APK
         env:
@@ -42,6 +44,7 @@ jobs:
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
+          tag_name: ${{ github.ref_name }}
           files: app/build/outputs/apk/release/*.apk
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
