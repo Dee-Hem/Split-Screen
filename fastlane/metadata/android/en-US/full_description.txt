@@ -1,0 +1,7 @@
+Splitz simplifies multitasking on Android by letting you create, group, and launch split-screen app pairs with a single tap.
+
+Key Features:
+- App Pairing: Launch two apps side-by-side automatically.
+- Grouping: Organize your favorite split-screen pairs into custom categories.
+- One-Tap Shortcuts: Place desktop shortcuts for quick access to your most-used pairs.
+- Clean & Lightweight: Open-source, lightweight design built with modern Android standards.
