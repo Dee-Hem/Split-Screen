@@ -19,3 +19,13 @@
 # If you keep the line number information, uncomment this to
 # hide the original source file name.
 #-renamesourcefileattribute SourceFile
+
+# Preserve the AccessibilityService class name so Settings and live component checks match
+-keep public class com.deehem.splitz.services.SplitScreenService {
+    public *;
+}
+
+# Preserve Room database entities and DAOs
+-keep class com.deehem.splitz.data.SplitShortcut { *; }
+-keep interface com.deehem.splitz.data.SplitShortcutDao { *; }
+
