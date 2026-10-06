@@ -133,7 +133,7 @@ class MainActivity : ComponentActivity() {
         if (bottomIntent == null) {
             Toast.makeText(
                 this,
-                "Cannot launch: bottom app ($bottomPkg) is not installed or enabled.",
+                "Cannot launch: bottom app is not installed.",
                 Toast.LENGTH_LONG
             ).show()
             return
