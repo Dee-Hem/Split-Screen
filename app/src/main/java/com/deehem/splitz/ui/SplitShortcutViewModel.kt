@@ -66,6 +66,7 @@ class SplitShortcutViewModel(application: Application) : AndroidViewModel(applic
 
     fun deleteShortcut(shortcut: SplitShortcut) {
         viewModelScope.launch {
+            ShortcutUtils.disableShortcut(getApplication(), shortcut)
             repository.deleteShortcut(shortcut)
         }
     }

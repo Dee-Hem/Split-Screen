@@ -1,4 +1,14 @@
 <resources>
     <string name="app_name">Splitz</string>
-    <string name="accessibility_service_description">This lightweight service is used exclusively to toggle the Android split-screen grid. No user data, keystrokes, or screen contents are read, analyzed, or transmitted. It operates entirely offline and locally on your device.</string>
+    <string name="accessibility_service_description">Splitz uses this Accessibility Service exclusively to automate placing your selected app pairs into split screen. The service is required for automatic split-screen placement; without it, apps will only open sequentially. Splitz operates 100% offline, without internet access, and does not read, collect, or transmit screen contents, keystrokes, or personal data.</string>
+    <string name="app_short_description">Launch paired apps in split screen with Accessibility Service automation.</string>
+    <string name="app_full_description">Splitz lets you pair any two installed apps and launch them together in split screen with a single tap from your home screen or within the app.
+
+Accessibility Service Disclosure:
+Splitz uses Android\'s Accessibility Service API exclusively to automate placing the two selected apps into Android\'s native split-screen mode.
+
+Important:
+• The Accessibility Service must be enabled for automatic split-screen placement.
+• Without the Accessibility Service enabled, Splitz will open the two apps sequentially one after another, but cannot automatically place them into split screen.
+• Privacy &amp; Security: Splitz operates 100% offline with zero network connectivity (no INTERNET permission requested or used). The Accessibility Service does not read screen contents, monitor keystrokes, track personal data, or transmit any information.</string>
 </resources>

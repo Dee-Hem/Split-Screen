@@ -1,7 +1,9 @@
-Splitz simplifies multitasking on Android by letting you create, group, and launch split-screen app pairs with a single tap.
+Splitz lets you pair any two installed apps and launch them together in split screen with a single tap from your home screen or within the app. Organize your favorite pairs into custom folders for quick access.
 
-Key Features:
-- App Pairing: Launch two apps side-by-side automatically.
-- Grouping: Organize your favorite split-screen pairs into custom categories.
-- One-Tap Shortcuts: Place desktop shortcuts for quick access to your most-used pairs.
-- Clean & Lightweight: Open-source, lightweight design built with modern Android standards.
+Accessibility Service Disclosure:
+Splitz uses Android's Accessibility Service API exclusively to automate placing the two selected apps into Android's native split-screen mode.
+
+Important:
+• The Accessibility Service must be enabled for automatic split-screen placement.
+• Without the Accessibility Service enabled, Splitz will open the two apps sequentially one after another, but cannot automatically place them into split screen.
+• Privacy & Security: Splitz operates 100% offline with zero network connectivity (no INTERNET permission requested or used). The Accessibility Service does not read screen contents, monitor keystrokes, track personal data, or transmit any information.

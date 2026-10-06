@@ -35,6 +35,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -73,7 +74,11 @@ class MainActivity : ComponentActivity() {
 
                 NavHost(navController = navController, startDestination = "home") {
                     composable("home") {
-                        HomeScreen(navController, viewModel)
+                        HomeScreen(
+                            navController = navController,
+                            viewModel = viewModel,
+                            onLaunchPair = { top, bottom -> launchInSplitScreen(top, bottom) }
+                        )
                     }
                     composable("create") {
                         CreateShortcutScreen(navController, viewModel)
@@ -101,6 +106,39 @@ class MainActivity : ComponentActivity() {
 
     private fun launchInSplitScreen(topPkg: String, bottomPkg: String) {
         val pm = packageManager
+        val topIntent = pm.getLaunchIntentForPackage(topPkg)?.apply {
+            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_MULTIPLE_TASK)
+        }
+        val bottomIntent = pm.getLaunchIntentForPackage(bottomPkg)?.apply {
+            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_LAUNCH_ADJACENT or Intent.FLAG_ACTIVITY_MULTIPLE_TASK)
+        }
+
+        // Validate that both applications are installed and launchable before attempting any launch
+        if (topIntent == null && bottomIntent == null) {
+            Toast.makeText(
+                this,
+                "Cannot launch: neither app is installed on this device.",
+                Toast.LENGTH_LONG
+            ).show()
+            return
+        }
+        if (topIntent == null) {
+            Toast.makeText(
+                this,
+                "Cannot launch: top app ($topPkg) is not installed or enabled.",
+                Toast.LENGTH_LONG
+            ).show()
+            return
+        }
+        if (bottomIntent == null) {
+            Toast.makeText(
+                this,
+                "Cannot launch: bottom app ($bottomPkg) is not installed or enabled.",
+                Toast.LENGTH_LONG
+            ).show()
+            return
+        }
+
         val isSettingsEnabled = SplitScreenService.isSettingsEnabled(this)
         val isServiceLive = SplitScreenService.isServiceLive(this)
 
@@ -109,15 +147,7 @@ class MainActivity : ComponentActivity() {
             waitForServiceInstance { service ->
                 if (service != null) {
                     try {
-                        val topIntent = pm.getLaunchIntentForPackage(topPkg)?.apply {
-                            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_MULTIPLE_TASK)
-                        }
-                        if (topIntent != null) {
-                            startActivity(topIntent)
-                        } else {
-                            Toast.makeText(this, "Top app not found", Toast.LENGTH_SHORT).show()
-                            return@waitForServiceInstance
-                        }
+                        startActivity(topIntent)
 
                         // Delay to allow top app to settle
                         android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
@@ -125,19 +155,14 @@ class MainActivity : ComponentActivity() {
 
                             // Delay to allow split divider to establish, then start bottom app
                             android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
-                                val bottomIntent = pm.getLaunchIntentForPackage(bottomPkg)?.apply {
-                                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_LAUNCH_ADJACENT or Intent.FLAG_ACTIVITY_MULTIPLE_TASK)
-                                }
-                                if (bottomIntent != null) {
-                                    try {
-                                        startActivity(bottomIntent)
-                                    } catch (e: Exception) {
-                                        val fallbackBottom = pm.getLaunchIntentForPackage(bottomPkg)?.apply {
-                                            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                                        }
-                                        if (fallbackBottom != null) {
-                                            startActivity(fallbackBottom)
-                                        }
+                                try {
+                                    startActivity(bottomIntent)
+                                } catch (e: Exception) {
+                                    val fallbackBottom = pm.getLaunchIntentForPackage(bottomPkg)?.apply {
+                                        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                                    }
+                                    if (fallbackBottom != null) {
+                                        startActivity(fallbackBottom)
                                     }
                                 }
                                 finish()
@@ -183,27 +208,32 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun fallbackLaunch(topPkg: String, bottomPkg: String) {
-        try {
-            val pm = packageManager
-            val topIntent = pm.getLaunchIntentForPackage(topPkg)?.apply {
-                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_MULTIPLE_TASK)
-            }
-            val bottomIntent = pm.getLaunchIntentForPackage(bottomPkg)?.apply {
-                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_MULTIPLE_TASK)
-            }
+        val pm = packageManager
+        val topIntent = pm.getLaunchIntentForPackage(topPkg)?.apply {
+            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_MULTIPLE_TASK)
+        }
+        val bottomIntent = pm.getLaunchIntentForPackage(bottomPkg)?.apply {
+            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_MULTIPLE_TASK)
+        }
 
-            if (topIntent != null) {
-                startActivity(topIntent)
-                Toast.makeText(this, "Enable Splitz Accessibility for 1-click automatic split screens!", Toast.LENGTH_LONG).show()
-            }
+        if (topIntent == null || bottomIntent == null) {
+            Toast.makeText(this, "Cannot launch: one or both apps are not installed.", Toast.LENGTH_LONG).show()
+            return
+        }
+
+        try {
+            startActivity(topIntent)
+            Toast.makeText(
+                this,
+                "Accessibility Service is not enabled. Both apps will start sequentially, but cannot be automatically placed in split screen.",
+                Toast.LENGTH_LONG
+            ).show()
 
             android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
-                if (bottomIntent != null) {
-                    try {
-                        startActivity(bottomIntent)
-                    } catch (e: Exception) {
-                        Toast.makeText(this, "Launch failed: ${e.message}", Toast.LENGTH_SHORT).show()
-                    }
+                try {
+                    startActivity(bottomIntent)
+                } catch (e: Exception) {
+                    Toast.makeText(this, "Launch failed: ${e.message}", Toast.LENGTH_SHORT).show()
                 }
                 finish()
             }, 800)
@@ -216,7 +246,11 @@ class MainActivity : ComponentActivity() {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HomeScreen(navController: NavController, viewModel: SplitShortcutViewModel) {
+fun HomeScreen(
+    navController: NavController,
+    viewModel: SplitShortcutViewModel,
+    onLaunchPair: (String, String) -> Unit
+) {
     val shortcuts by viewModel.allShortcuts.collectAsState(initial = emptyList())
     val context = LocalContext.current
 
@@ -240,6 +274,9 @@ fun HomeScreen(navController: NavController, viewModel: SplitShortcutViewModel) 
     var editingShortcut by remember { mutableStateOf<SplitShortcut?>(null) }
     var editNameText by remember { mutableStateOf("") }
     var editFolderText by remember { mutableStateOf("") }
+
+    // Delete Shortcut Confirmation Dialog State
+    var deletingShortcut by remember { mutableStateOf<SplitShortcut?>(null) }
 
     // Folder Management State
     var renamingFolder by remember { mutableStateOf<String?>(null) }
@@ -364,6 +401,37 @@ fun HomeScreen(navController: NavController, viewModel: SplitShortcutViewModel) 
             },
             dismissButton = {
                 TextButton(onClick = { editingShortcut = null }) {
+                    Text("Cancel")
+                }
+            }
+        )
+    }
+
+    // Delete Shortcut Confirmation Dialog
+    if (deletingShortcut != null) {
+        val targetShortcut = deletingShortcut!!
+        AlertDialog(
+            onDismissRequest = { deletingShortcut = null },
+            title = { Text("Delete Shortcut") },
+            text = {
+                Text(
+                    "Delete shortcut '${targetShortcut.name}'? Any pinned launcher shortcut on your home screen will be disabled and will no longer work.",
+                    style = MaterialTheme.typography.bodyMedium
+                )
+            },
+            confirmButton = {
+                Button(
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),
+                    onClick = {
+                        viewModel.deleteShortcut(targetShortcut)
+                        deletingShortcut = null
+                    }
+                ) {
+                    Text("Delete")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { deletingShortcut = null }) {
                     Text("Cancel")
                 }
             }
@@ -681,12 +749,13 @@ fun HomeScreen(navController: NavController, viewModel: SplitShortcutViewModel) 
                             items(folderShortcuts, key = { it.id }) { shortcut ->
                                 ShortcutItem(
                                     shortcut = shortcut,
+                                    onLaunch = { onLaunchPair(shortcut.topPackage, shortcut.bottomPackage) },
                                     onEdit = {
                                         editingShortcut = shortcut
                                         editNameText = shortcut.name
                                         editFolderText = shortcut.folder ?: ""
                                     },
-                                    onDelete = { viewModel.deleteShortcut(shortcut) },
+                                    onDelete = { deletingShortcut = shortcut },
                                     onPin = { ShortcutUtils.createPinnedShortcut(context, shortcut) }
                                 )
                             }
@@ -783,12 +852,26 @@ fun FolderHeader(
 @Composable
 fun ShortcutItem(
     shortcut: SplitShortcut,
+    onLaunch: () -> Unit,
     onEdit: () -> Unit,
     onDelete: () -> Unit,
     onPin: () -> Unit
 ) {
+    val context = LocalContext.current
+    val pm = context.packageManager
+    val isTopInstalled = remember(shortcut.topPackage) {
+        pm.getLaunchIntentForPackage(shortcut.topPackage) != null
+    }
+    val isBottomInstalled = remember(shortcut.bottomPackage) {
+        pm.getLaunchIntentForPackage(shortcut.bottomPackage) != null
+    }
+    val isAnyAppMissing = !isTopInstalled || !isBottomInstalled
+
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        onClick = onLaunch,
+        modifier = Modifier
+            .fillMaxWidth()
+            .testTag("shortcut_card_${shortcut.id}"),
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surfaceVariant
@@ -830,27 +913,78 @@ fun ShortcutItem(
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.outline
                 )
+
+                if (isAnyAppMissing) {
+                    Spacer(modifier = Modifier.height(6.dp))
+                    Surface(
+                        color = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.7f),
+                        shape = RoundedCornerShape(6.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                Icons.Default.WarningAmber,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.error,
+                                modifier = Modifier.size(14.dp)
+                            )
+                            Spacer(modifier = Modifier.width(4.dp))
+                            val missingWarning = when {
+                                !isTopInstalled && !isBottomInstalled -> "Both apps are uninstalled"
+                                !isTopInstalled -> "Top app is not installed"
+                                else -> "Bottom app is not installed"
+                            }
+                            Text(
+                                text = missingWarning,
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onErrorContainer,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                        }
+                    }
+                }
             }
 
-            Row {
-                IconButton(onClick = onEdit) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                IconButton(
+                    onClick = onLaunch,
+                    modifier = Modifier.testTag("launch_shortcut_${shortcut.id}")
+                ) {
                     Icon(
-                        Icons.Default.Edit,
-                        contentDescription = "Edit Shortcut",
-                        tint = MaterialTheme.colorScheme.secondary
+                        Icons.Default.PlayArrow,
+                        contentDescription = "Launch Split Screen",
+                        tint = MaterialTheme.colorScheme.primary
                     )
                 }
-                IconButton(onClick = onPin) {
+                IconButton(
+                    onClick = onPin,
+                    modifier = Modifier.testTag("pin_shortcut_${shortcut.id}")
+                ) {
                     Icon(
                         Icons.Default.PushPin,
                         contentDescription = "Pin to Home",
                         tint = MaterialTheme.colorScheme.primary
                     )
                 }
-                IconButton(onClick = onDelete) {
+                IconButton(
+                    onClick = onEdit,
+                    modifier = Modifier.testTag("edit_shortcut_${shortcut.id}")
+                ) {
                     Icon(
-                        Icons.Default.Delete,
-                        contentDescription = "Delete",
+                        Icons.Default.Edit,
+                        contentDescription = "Edit Shortcut",
+                        tint = MaterialTheme.colorScheme.secondary
+                    )
+                }
+                IconButton(
+                    onClick = onDelete,
+                    modifier = Modifier.testTag("delete_shortcut_${shortcut.id}")
+                ) {
+                    Icon(
+                        Icons.Default.DeleteOutline,
+                        contentDescription = "Delete Shortcut",
                         tint = MaterialTheme.colorScheme.error
                     )
                 }

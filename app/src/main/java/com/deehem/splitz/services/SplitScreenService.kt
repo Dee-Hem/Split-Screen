@@ -29,6 +29,7 @@ class SplitScreenService : AccessibilityService() {
          */
         fun isSettingsEnabled(context: Context): Boolean {
             val expectedComponentName = "${context.packageName}/${SplitScreenService::class.java.name}"
+            val expectedCn = android.content.ComponentName(context, SplitScreenService::class.java)
             val enabledServicesSetting = android.provider.Settings.Secure.getString(
                 context.contentResolver,
                 android.provider.Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES
@@ -38,6 +39,10 @@ class SplitScreenService : AccessibilityService() {
             while (colonSplitter.hasNext()) {
                 val componentNameString = colonSplitter.next()
                 if (componentNameString.equals(expectedComponentName, ignoreCase = true)) {
+                    return true
+                }
+                val cn = android.content.ComponentName.unflattenFromString(componentNameString)
+                if (cn != null && cn == expectedCn) {
                     return true
                 }
             }

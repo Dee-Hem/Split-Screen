@@ -1,6 +1,6 @@
 {
   "name": "Splitz",
-  "description": "Splitz - Fast split-screen app pairing, custom folders, and 1-tap shortcuts.",
+  "description": "Splitz automates launching paired apps in split screen via Android's Accessibility Service, with home screen shortcuts and custom folders.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

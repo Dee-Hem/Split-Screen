@@ -13,6 +13,8 @@ import com.deehem.splitz.data.SplitShortcut
 
 object ShortcutUtils {
 
+    fun getShortcutId(shortcut: SplitShortcut): String = "split_shortcut_${shortcut.id}"
+
     fun createPinnedShortcut(context: Context, shortcut: SplitShortcut) {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
             Toast.makeText(context, "Requires Android 8.0 or above for pin shortcuts", Toast.LENGTH_SHORT).show()
@@ -30,7 +32,7 @@ object ShortcutUtils {
                     flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
                 }
 
-                val shortcutId = "split_shortcut_${shortcut.id}"
+                val shortcutId = getShortcutId(shortcut)
 
                 val icon = try {
                     Icon.createWithResource(context, com.deehem.splitz.R.drawable.split_screen_logo_1780993093646)
@@ -84,7 +86,7 @@ object ShortcutUtils {
                 flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
             }
 
-            val shortcutId = "split_shortcut_${shortcut.id}"
+            val shortcutId = getShortcutId(shortcut)
 
             val icon = try {
                 Icon.createWithResource(context, com.deehem.splitz.R.drawable.split_screen_logo_1780993093646)
@@ -120,7 +122,7 @@ object ShortcutUtils {
                     flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
                 }
                 
-                val shortcutId = "split_shortcut_${shortcut.id}"
+                val shortcutId = getShortcutId(shortcut)
                 val icon = try {
                     Icon.createWithResource(context, com.deehem.splitz.R.drawable.split_screen_logo_1780993093646)
                 } catch (e: Exception) {
@@ -136,6 +138,27 @@ object ShortcutUtils {
             }
             
             shortcutManager.dynamicShortcuts = dynamicShortcuts
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
+
+    /**
+     * Disables the pinned launcher shortcut on the user's home screen and removes it
+     * from dynamic shortcuts when a pair is deleted.
+     */
+    fun disableShortcut(context: Context, shortcut: SplitShortcut) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return
+        try {
+            val shortcutManager = context.getSystemService(ShortcutManager::class.java) ?: return
+            val shortcutId = getShortcutId(shortcut)
+            val disabledMessage = "This split shortcut was deleted in Splitz"
+
+            // Remove from dynamic shortcuts
+            shortcutManager.removeDynamicShortcuts(listOf(shortcutId))
+
+            // Disable pinned shortcut on launcher so it cannot launch the deleted pair
+            shortcutManager.disableShortcuts(listOf(shortcutId), disabledMessage)
         } catch (e: Exception) {
             e.printStackTrace()
         }
